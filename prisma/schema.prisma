@@ -1,0 +1,44 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+  // output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Drug {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+
+  stocks Stock[]
+}
+
+model Pharmacy {
+  id              Int     @id @default(autoincrement())
+  name            String
+  latitude        Float
+  longitude       Float
+  address         String?
+  phone           String?
+  google_place_id String?
+
+  stocks          Stock[]
+}
+
+model Stock {
+  id           Int  @id @default(autoincrement())
+  drug_id      Int
+  pharmacy_id  Int
+  isAvailable  Boolean
+
+  drug         Drug     @relation(fields: [drug_id], references: [id])
+  pharmacy     Pharmacy @relation(fields: [pharmacy_id], references: [id])
+
+  @@unique([drug_id, pharmacy_id]) // prevents duplicate entries
+}
