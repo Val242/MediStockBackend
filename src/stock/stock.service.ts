@@ -3,10 +3,13 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateStockDto, NearbyDrugStockDto} from './dto/create-stock.dto';
 import {UpdateStockDto } from './dto/update-stock.dto'
 import { DatabaseService } from 'src/database/database.service';
+import { AiService } from 'src/ai/ai.service';
+import { DrugService } from 'src/drug/drug.service';
+import { calculateDistance } from 'utils/distance';
 
 @Injectable()
 export class StockService {
-  constructor(private databaseService: DatabaseService) {}
+  constructor(private databaseService: DatabaseService,private aiService: AiService, private drugService: DrugService) {}
    private readonly MAX_SEARCH_RADIUS_KM = 10;
 
   async create(createStockDto: CreateStockDto) {
@@ -18,6 +21,8 @@ export class StockService {
       },
     });
   }
+
+    
 
   async findAll() {
     return this.databaseService.stock.findMany({
@@ -38,6 +43,22 @@ export class StockService {
       include: { drug: true },
     });
   }
+
+  // stock.service.ts
+
+    async findAvailableStock(drugIds: number[]) {
+      return this.databaseService.stock.findMany({
+        where: {
+          drugId: {
+            in: drugIds,
+          },
+        },
+        include: {
+          pharmacy: true, // get pharmacy info
+          drug: true,     // get drug info
+        },
+      });
+    }
 
   async update(id: number, dto: UpdateStockDto) {
     const stock = await this.databaseService.stock.findUnique({ where: { id } });
@@ -72,8 +93,11 @@ export class StockService {
         },
         include: {
           pharmacy: true, // Include pharmacy details
+          drug:true
         },
       });
+
+        
 
       // 4️⃣ Map pharmacies with distance
       const withDistance = availableStocks.map((stock) => {
@@ -108,6 +132,80 @@ export class StockService {
       return R * c;
     }
   
+    
+      // stock.service.ts
+  async smartSearch(userInput: {text:string}, userLat: number, userLng: number) {
+    // 1️⃣ AI extraction
+    const aiResult = await this.aiService.extractDrugsAndSymptoms(userInput);
+    const drugNames = aiResult.drugs;
+
+    if (!drugNames || drugNames.length === 0) {
+      return { message: 'No drugs identified from input' };
+    }
+
+    // 2️⃣ Find drugs in DB
+    const drugs = await this.drugService.findDrugsByNames(drugNames);
+
+    if (drugs.length === 0) {
+      return { message: 'No matching drugs in database' };
+    }
+
+    const drugIds = drugs.map(d => d.id);
+
+    // 3️⃣ Get available stock
+    const stocks = await this.findAvailableStock(drugIds);
+
+    // 4️⃣ Map + calculate distance
+    const mapped = stocks.map(stock => ({
+      pharmacyId: stock.pharmacy.id,
+      pharmacy: stock.pharmacy.name,
+      lat: stock.pharmacy.latitude,
+      lng: stock.pharmacy.longitude,
+      drug: stock.drug.name,
+      distance: calculateDistance(
+        userLat,
+        userLng,
+        stock.pharmacy.latitude,
+        stock.pharmacy.longitude,
+      ),
+    }));
+
+    // 5️⃣ Group by pharmacy
+    const grouped = {};
+
+    mapped.forEach(item => {
+      if (!grouped[item.pharmacyId]) {
+        grouped[item.pharmacyId] = {
+          pharmacy: item.pharmacy,
+          distance: item.distance,
+          availableDrugs: [],
+        };
+      }
+
+      grouped[item.pharmacyId].availableDrugs.push(item.drug);
+
+      // keep shortest distance
+      if (item.distance < grouped[item.pharmacyId].distance) {
+        grouped[item.pharmacyId].distance = item.distance;
+      }
+    });
+
+    // 6️⃣ Convert to array
+    const result = Object.values(grouped);
+
+    // 7️⃣ Rank (distance + number of drugs)
+    result.sort((a: any, b: any) => {
+      const scoreA = a.availableDrugs.length * 2 - a.distance;
+      const scoreB = b.availableDrugs.length * 2 - b.distance;
+      return scoreB - scoreA;
+    });
+
+    return result;
+  }
+
+// stock.service.ts
+
+
 
   async remove(id: number) {
     const stock = await this.databaseService.stock.findUnique({ where: { id } });

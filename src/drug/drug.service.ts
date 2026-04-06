@@ -23,6 +23,18 @@ export class DrugService {
     return this.databaseService.drug.findMany();
   }
 
+  // drug.service.ts
+  async findDrugsByNames(names: string[]) {
+    return this.databaseService.drug.findMany({
+      where: {
+        name: {
+          in: names,
+          mode: 'insensitive',
+        },
+      },
+    });
+  }
+
   // Search drugs by name (partial match)
   async search(searchDrugDto: SearchDrugDto) {
     return this.databaseService.drug.findMany({

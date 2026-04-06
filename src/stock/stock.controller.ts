@@ -38,6 +38,12 @@ export class StockController {
     return this.stockService.findNearestWithStock(query);
   }  
 
+  // stock.controller.ts
+@Post('smart-search')
+async smartSearch(@Body() body: { text: string, lat: number, lng: number }) {
+  return this.stockService.smartSearch(body, body.lat, body.lng);
+}
+
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.stockService.remove(Number(id));
