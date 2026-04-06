@@ -26,3 +26,4 @@ export class DrugController {
     return this.drugService.search(query);
   }
 }
+

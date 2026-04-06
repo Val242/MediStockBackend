@@ -33,12 +33,12 @@ model Pharmacy {
 
 model Stock {
   id           Int  @id @default(autoincrement())
-  drug_id      Int
-  pharmacy_id  Int
+  drugId     Int
+  pharmacyId  Int
   isAvailable  Boolean
 
-  drug         Drug     @relation(fields: [drug_id], references: [id])
-  pharmacy     Pharmacy @relation(fields: [pharmacy_id], references: [id])
+  drug         Drug     @relation(fields: [drugId], references: [id])
+  pharmacy     Pharmacy @relation(fields: [pharmacyId], references: [id])
 
-  @@unique([drug_id, pharmacy_id]) // prevents duplicate entries
+  @@unique([drugId, pharmacyId]) // prevents duplicate entries
 }
