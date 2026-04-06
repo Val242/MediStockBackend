@@ -15,6 +15,7 @@ datasource db {
 model Drug {
   id    Int    @id @default(autoincrement())
   name  String @unique
+  image String? 
 
   stocks Stock[]
 }
@@ -24,6 +25,7 @@ model Pharmacy {
   name            String
   latitude        Float
   longitude       Float
+  image           String? 
   address         String?
   phone           String?
   google_place_id String?

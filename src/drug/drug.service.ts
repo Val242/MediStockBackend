@@ -3,6 +3,7 @@ import { CreateDrugDto } from './dto/create-drug.dto';
 import { UpdateDrugDto } from './dto/update-drug.dto';
 import { DatabaseService } from 'src/database/database.service';
 import { SearchDrugDto } from './dto/search-drug.dto';
+import { PaginationDto } from './dto/pagination.dto';
 
 @Injectable()
 export class DrugService {
@@ -19,8 +20,21 @@ export class DrugService {
 
 
   // Get all drugs
-  async findAll() {
-    return this.databaseService.drug.findMany();
+  async findAll(paginationDto:PaginationDto) {
+    const {limit, offset} = paginationDto;
+
+    const drugs= await this.databaseService.drug.findMany({
+      take:limit,
+      skip:offset
+    });
+    const total = await this.databaseService.drug.count();
+
+    return {
+      data: drugs,
+      total,
+      limit,
+      offset
+    }
   }
 
   // drug.service.ts

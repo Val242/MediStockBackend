@@ -10,7 +10,7 @@ import { calculateDistance } from 'utils/distance';
 @Injectable()
 export class StockService {
   constructor(private databaseService: DatabaseService,private aiService: AiService, private drugService: DrugService) {}
-   private readonly MAX_SEARCH_RADIUS_KM = 10;
+   private readonly MAX_SEARCH_RADIUS_KM = 25;
 
   async create(createStockDto: CreateStockDto) {
     return this.databaseService.stock.create({
