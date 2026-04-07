@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateDrugDto } from './dto/create-drug.dto';
 import { UpdateDrugDto } from './dto/update-drug.dto';
 import { DatabaseService } from 'src/database/database.service';
@@ -60,5 +60,19 @@ export class DrugService {
       },
     });
   }
+
+  async addDrugPic(id:number,imageUrl: string){
+    const drug = await this.databaseService.drug.findUnique({ where: { id } });
+  if (!drug) throw new NotFoundException('Drug not found');
+
+    return this.databaseService.drug.update({
+    where: { id },
+    data: { image: imageUrl }
+  });
+  }
+
+  
+
+
 
 }

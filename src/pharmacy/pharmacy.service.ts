@@ -1,5 +1,5 @@
 // pharmacy.service.ts
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { CreatePharmacyDto, NearbyPharmacyDto } from './dto/create-pharmacy.dto';
 import { DatabaseService } from 'src/database/database.service';
@@ -62,4 +62,15 @@ export class PharmacyService {
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
   }
-}
+
+    async addPharmacyPic(id:number,imageUrl: string){
+      const pharmacy = await this.databaseService.pharmacy.findUnique({ where: { id } });
+    if (!pharmacy) throw new NotFoundException('Pharmacy not found');
+  
+      return this.databaseService.pharmacy.update({
+      where: { id },
+      data: { image: imageUrl }
+    });
+
+    
+}}
