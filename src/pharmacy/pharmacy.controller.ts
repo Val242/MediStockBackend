@@ -27,6 +27,12 @@ export class PharmacyController {
     return this.pharmacyService.findNearby(query);
   }
 
+
+  @Get(':id/available-drugs')
+  async getAvailableDrugs(@Param('id') id: string){
+      return this.pharmacyService.getAvailableDrugs(+id)
+  }
+
   @Patch(':id/pharmacy-picture')
   @UseInterceptors(FileInterceptor('file'))
   async updateProfilePic(

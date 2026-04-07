@@ -71,6 +71,15 @@ export class PharmacyService {
       where: { id },
       data: { image: imageUrl }
     });
-
     
-}}
+}
+        async getAvailableDrugs(id:number){
+      return this.databaseService.stock.findMany({
+        where:{
+          pharmacyId: id,
+          isAvailable: true
+        },
+        include:{drug:true}
+      })
+    }
+}
