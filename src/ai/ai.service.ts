@@ -42,17 +42,30 @@ export class AiService {
       model: 'llama-3.3-70b-versatile',
       messages: [
         {
-          role: 'user',
-          content: `
-Extract the drugs and symptoms mentioned in the following text.
-Respond ONLY with JSON in the format:
-{
-  "drugs": ["drug1", "drug2"],
-  "symptoms": ["symptom1", "symptom2"]
-}
-Text: "${inputText}"
-`,
-        },
+      role: 'user',
+      content: `
+    You are a medical text extraction assistant.
+
+    Extract all drug names and symptoms mentioned in the text.
+
+    Rules:
+    - Drugs include medications (e.g., Paracetamol, Ibuprofen, Amoxicillin).
+    - Symptoms include physical or mental conditions (e.g., headache, fever, nausea).
+    - Ignore anything that is not a drug or symptom.
+    - Do not infer or guess — only extract what is explicitly mentioned.
+    - Handle misspellings if obvious (e.g., "paracetmol" → "paracetamol").
+    - Do not include duplicates.
+    - Return lowercase values.
+
+    Respond ONLY with valid JSON in this exact format:
+    {
+      "drugs": ["drug1", "drug2"],
+      "symptoms": ["symptom1", "symptom2"]
+    }
+
+    Text: "${inputText}"
+    `
+    },
       ],
       temperature: 0.0,
       max_tokens: 200,
